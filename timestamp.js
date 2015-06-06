@@ -11,7 +11,7 @@ var ts = (function(){
   /**
   * Convert written time string to JS Date object.
   * @param {string} written time string, in format of "01/01/15 12:13pm"
-  * @return {Date}
+  * @return {Date|null}
   */
   pub.parseDateString = function(dateString){
     var re = /\s*(\d{1,2})[-\/](\d{1,2})[-\/](\d{2}|\d{4})\s+(\d{1,2}):(\d{1,2})\s*(am|pm)?\s*/;
@@ -28,14 +28,21 @@ var ts = (function(){
       year = parseInt(dateValues[3]);
       hour = parseInt(dateValues[4]);
       minute = parseInt(dateValues[5]);
-      amPm = parseInt(dateValues[6]);
+      amPm = dateValues[6];
+
+      // if 2-digit year given, assume it's referring to current century
+      if (year < 100) {
+        var currentYear = new Date().getFullYear();
+        var currentCentury = currentYear - (currentYear % 100);
+        year = currentCentury + year;
+      }
 
       // if time is PM, change hour to 24 hour equivalent
-      if (amPm === 'pm') {
+      if (amPm && amPm.toLowerCase() === 'pm' && hour < 12) {
         hour += 12;
       }
 
-      date = Date(year, month, day, hour, minute);
+      date = new Date(year, month - 1, day, hour, minute);
     } else {
       date = null;
     }
@@ -43,24 +50,24 @@ var ts = (function(){
     return date;
   };
 
+
   /**
   * Create a unix timestamp from the given time string, the number of seconds since
   * Jan 01 1970 (UTC). Example: "1433512570".
   * @param {string} written time string
-  * @return {string} unix timestamp
+  * @return {string|null} unix timestamp, null if invalid time given
   */
-  pub.unix = function(){
-    var date = parseTimeString();
-    var timestamp;
+  pub.unix = function(dateString){
+    var date = pub.parseDateString(dateString);
+    var timestamp = null;
 
-    // if browser doesn't support Date.now, fall back to using Date.getTime()
-    if (!Date.now) {
-      Date.now = function() { return new Date().getTime(); }
+    if (date) {
+      timestamp = Math.floor(date.getTime() / 1000);
     }
 
-    timestamp = Math.floor(Date.now() / 1000);
     return timestamp;
   };
+
 
   /**
   * Create an SQL timestamp from the given string. Example: "1999-01-08 04:05:06".
@@ -70,12 +77,13 @@ var ts = (function(){
   pub.sql = function(){
   };
 
+
   /**
   * Create an ISO 8601 timestamp from the given string. Example: "2007-04-05T14:30".
   * @param {string} written time string
   * @return {string} ISO 8601 timestamp
   */
-  pub.iso8601 = function(){
+  pub.iso = function(){
   }
 
   return pub;
