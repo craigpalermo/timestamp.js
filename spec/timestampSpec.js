@@ -1,6 +1,7 @@
 // load external module to test
 var ts = require('../timestamp').ts;
 
+
 /*
 * Test - parseDateString
 */
@@ -43,6 +44,7 @@ describe("A datestring parser", function(){
   });
 });
 
+
 /*
 * Test - unix timestamp
 */
@@ -61,4 +63,27 @@ describe("A unix timestamp", function(){
     var dateString = '06-06-15 13 00 time stuff';
     expect(ts.unix(dateString)).toBeNull();
   });
+});
+
+
+/*
+* Test - ISO 8601 timestamp
+*/
+describe("An ISO 8601 timestamp", function(){
+    it("should be a valid string that conforms to the ISO 8601 specification", function(){
+        var referenceTimestamp = '2015-06-03T13:21:58';
+        var dateString = '6/3/2015 1:21:58pm';
+        expect(ts.iso(dateString)).toEqual(referenceTimestamp);
+    });
+
+    it("should add leading zeros to single-digit values", function(){
+        var referenceTimestamp = '2015-06-03T01:02:03';
+        var dateString = '6/3/2015 1:02:03am';
+        expect(ts.iso(dateString)).toEqual(referenceTimestamp);
+    });
+
+    it("should return null when an invalid time is given", function(){
+        var dateString = '06-06-15 1300';
+        expect(ts.iso(dateString)).toBeNull();
+    });
 });

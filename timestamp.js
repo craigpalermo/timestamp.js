@@ -14,10 +14,10 @@ var ts = (function(){
   * @return {Date|null}
   */
   pub.parseDateString = function(dateString){
-    var re = /\s*(\d{1,2})[-\/](\d{1,2})[-\/](\d{2}|\d{4})\s+(\d{1,2}):(\d{1,2})\s*(am|pm)?\s*/;
+    var re = /\s*(\d{1,2})[-\/](\d{1,2})[-\/](\d{2}|\d{4})\s+(\d{1,2}):(\d{1,2}):?(\d{1,2})?\s*(am|pm)?\s*/;
     var date;
     var dateValues;
-    var month, day, year, hour, minute, amPm;
+    var month, day, year, hour, minute, second, amPm;
 
     if (re.test(dateString)) {
       dateValues = re.exec(dateString);
@@ -28,7 +28,13 @@ var ts = (function(){
       year = parseInt(dateValues[3]);
       hour = parseInt(dateValues[4]);
       minute = parseInt(dateValues[5]);
-      amPm = dateValues[6];
+      second = parseInt(dateValues[6]);
+      amPm = dateValues[7];
+
+      // if second is absent, default it to 0
+      if (!second) {
+        second = 0;
+      }
 
       // if 2-digit year given, assume it's referring to current century
       if (year < 100) {
@@ -42,7 +48,7 @@ var ts = (function(){
         hour += 12;
       }
 
-      date = new Date(year, month - 1, day, hour, minute);
+      date = new Date(year, month - 1, day, hour, minute, second);
     } else {
       date = null;
     }
@@ -74,8 +80,17 @@ var ts = (function(){
   * @param {string} written time string
   * @return {string} SQL timestamp
   */
-  pub.sql = function(){
+  pub.sql = function(dateString){
   };
+
+
+  var padZero = function(num) {
+    if (num < 10) {
+      num = '0' + num;
+    }
+
+    return num;
+  }
 
 
   /**
@@ -83,7 +98,15 @@ var ts = (function(){
   * @param {string} written time string
   * @return {string} ISO 8601 timestamp
   */
-  pub.iso = function(){
+  pub.iso = function(dateString){
+    var date = pub.parseDateString(dateString);
+    var timestamp = null;
+
+    if (date) {
+      timestamp = date.getFullYear() + '-' + padZero(date.getMonth() + 1) + '-' + padZero(date.getDate()) + 'T' + padZero(date.getHours()) + ':' + padZero(date.getMinutes()) + ':' + padZero(date.getSeconds());
+    }
+
+    return timestamp;
   }
 
   return pub;
