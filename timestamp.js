@@ -112,4 +112,9 @@ var ts = (function(){
     return pub;
 }());
 
+
+if (!exports) {
+  var exports = {};
+}
+
 exports.ts = ts;
